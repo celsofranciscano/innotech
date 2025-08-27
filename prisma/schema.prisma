@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model tbprivileges {
+  PK_privilege  Int       @id @default(autoincrement())
+  privilege     String    @unique // Superadminstardor,Coordinador,Estudiante,Supervisor,Invitado
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+  actionHistory Json? // Campo donde se guarda el historial objeto
+
+  tbusers tbusers[]
+}
+
+// Modelo tbusers
+model tbusers {
+  PK_user        Int     @id @default(autoincrement())
+  FK_privilege   Int
+  firstName      String
+  lastName       String
+  country        String?
+  city           String?
+  email          String  @unique
+  profileImage   String? // ENLACE DE PERFIL
+  password       String?
+  // --- Perfil profesional ---
+  profession     String? // Profesión principal (ej: Software Engineer, Abogado)
+  specialization String? // Área específica de enfoque (ej: Inteligencia Artificial, Derecho Penal)
+  summary        String? // Resumen breve de trayectoria profesional (2-3 líneas máx.)
+
+  // --- Enlaces profesionales ---
+  linkedinUrl      String?
+  githubUrl        String?
+  websiteUrl       String?
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime?
+  actionHistory    Json? // Campo donde se guarda el historial objeto
+  tbdevices        tbdevices?
+  tbprivileges     tbprivileges       @relation(fields: [FK_privilege], references: [PK_privilege])
+  tbprojectmembers tbprojectmembers[]
+  tbcalls          tbcalls[]
+  tbjurors         tbjurors[]
+}
+
+// DISPOSITIVOS
+model tbdevices {
+  PK_device Int       @id @default(autoincrement())
+  FK_user   Int       @unique
+  devices   Json //OBJETO CON LOS DATOS DE DISPOSITIVOS
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  tbusers   tbusers   @relation(fields: [FK_user], references: [PK_user])
+}
+
+/// --------------------------------------
+/// CONVOCATORIAS / CONCURSOS
+/// --------------------------------------
+model tbcalls {
+  PK_call         Int      @id @default(autoincrement())
+  FK_user         Int // CORDINADOR   (usuario)
+  title           String
+  description     String?
+  note            String?
+  urlImage        String? // Enlace a imagen
+  pdfGuidelines   String? // Enlace al PDF con reglas y directrices completas
+  submissionOpen  DateTime
+  submissionClose DateTime
+  isActive        Boolean  @default(true)
+  isIndividual    Boolean  @default(true)
+
+  // Tipo de proyecto aceptado
+  allowedProjectTypes Json?
+
+  // Categorías o áreas de proyecto permitidas
+  allowedCategories Json?
+
+  // Requisitos mínimos
+  minTeamMembers      Int?
+  maxTeamMembers      Int?
+  minExperienceLevel  String?
+  minTechRequirements Json?
+
+  // Premios y distinciones
+  prizes Json?
+
+  // Información académica (añadida)
+  materia  String? // Nombre de la materia (ej. "Algoritmos y Estructuras de Datos")
+  semestre String? // Semestre o ciclo (ej. "2025-1", "Semestre 2")
+
+  // Fechas adicionales
+  resultsAnnouncement DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime?
+  actionHistory       Json? // Campo donde se guarda el historial objeto
+
+  // Relaciones
+  tbprojects           tbprojects[]
+  tbjurors             tbjurors[]
+  tbevaluationcriteria tbevaluationcriteria[]
+  tbusers              tbusers?               @relation(fields: [FK_user], references: [PK_user])
+}
+
+model tbevaluationcriteria {
+  PK_criteria     Int               @id @default(autoincrement())
+  FK_call         Int // Convocatoria
+  criteria        String // Ej: "Innovación", "Impacto", "Calidad técnica"
+  description     String?
+  maxScore        Int               @default(10) // Máximo puntaje posible
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime?
+  actionHistory   Json? // Campo donde se guarda el historial objeto
+  tbcalls         tbcalls           @relation(fields: [FK_call], references: [PK_call])
+  tbreviewdetails tbreviewdetails[]
+}
+
+// JURADOS
+
+model tbjurors {
+  PK_assignment   Int               @id @default(autoincrement())
+  FK_call         Int // Convocatoria
+  FK_user         Int // Jurado (usuario)
+  assignedAt      DateTime          @default(now())
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime?
+  actionHistory   Json? // Campo donde se guarda el historial objeto
+  tbcalls         tbcalls           @relation(fields: [FK_call], references: [PK_call])
+  tbusers         tbusers           @relation(fields: [FK_user], references: [PK_user])
+  tbreviewdetails tbreviewdetails[]
+}
+
+// TIPO DE PROYECTO  (tecnología/plataforma)
+model tbprojecttypes {
+  PK_type       Int          @id @default(autoincrement())
+  type          String       @unique // Ej: "Web", "Móvil", "Escritorio", "API", "SaaS", "IoT", "AI", "Data", "Seguridad", "Otro"
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime?
+  actionHistory Json? // Campo donde se guarda el historial objeto
+  tbprojects    tbprojects[]
+}
+
+/// --------------------------------------
+/// CATEGORÍAS DE PROYECTO (sector/profesional)
+/// --------------------------------------
+model tbprojectcategories {
+  PK_category   Int          @id @default(autoincrement())
+  category      String       @unique // Ej: "Educación", "Salud", "Finanzas", "Entretenimiento", "Industria", "Medio ambiente", "Comercio", "Investigación"
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime?
+  actionHistory Json? // Campo donde se guarda el historial objeto
+  tbprojects    tbprojects[]
+}
+
+// ESTADO DE PROYECTOS
+model tbprojectstatus {
+  PK_status     Int          @id @default(autoincrement())
+  status        String       @unique // Nombre del estado: "Borrador", "Pendiente", "En Revisión", "Aprobado", "Rechazado"
+  description   String? // Descripción opcional del estado
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime?
+  actionHistory Json? // Campo donde se guarda el historial objeto
+  // Relación con los proyectos que tienen este estado
+  tbprojects    tbprojects[]
+}
+
+/// --------------------------------------
+/// PROYECTOS
+/// --------------------------------------
+model tbprojects {
+  PK_project  Int @id @default(autoincrement())
+  FK_call     Int // Convocatoria
+  FK_type     Int // Tipo de proyecto
+  FK_category Int // Categoría profesional
+  FK_status   Int // estado del proyecto
+
+  title        String
+  shortSummary String? // Resumen corto
+  problem      String? // problema que resuelve
+  solution     String? // Como lo resuelve
+
+  // Media / Links
+  coverImage String?
+  repoUrl    String?
+  demoUrl    String?
+  videoUrl   String?
+
+  // Taxonomía
+  technologies  Json?
+  tags          Json?
+  isFeatured    Boolean   @default(false)
+  isPublished   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+  actionHistory Json? // Campo donde se guarda el historial objeto
+
+  // Relaciones
+  tbcalls             tbcalls?             @relation(fields: [FK_call], references: [PK_call])
+  tbprojecttypes      tbprojecttypes?      @relation(fields: [FK_type], references: [PK_type])
+  tbprojectcategories tbprojectcategories? @relation(fields: [FK_category], references: [PK_category])
+  tbprojectstatus     tbprojectstatus?     @relation(fields: [FK_status], references: [PK_status])
+  tbprojectmembers    tbprojectmembers[] // Equipo de estudiantes
+  tbreviewdetails     tbreviewdetails[]
+}
+
+/// --------------------------------------
+/// MIEMBROS DE PROYECTO (equipo)
+/// --------------------------------------
+model tbprojectmembers {
+  PK_member     Int        @id @default(autoincrement())
+  FK_project    Int
+  FK_user       Int
+  role          String? // Ej: "Líder", "Backend", "Frontend", "UX", "AI"
+  isLeader      Boolean    @default(false)
+  actionHistory Json? // Campo donde se guarda el historial objeto
+  tbprojects    tbprojects @relation(fields: [FK_project], references: [PK_project])
+  tbusers       tbusers    @relation(fields: [FK_user], references: [PK_user])
+}
+
+model tbreviewdetails {
+  PK_detail            Int                  @id @default(autoincrement())
+  FK_criteria          Int // Evaluación realizada por un jurado a un proyecto
+  FK_assignment        Int // quie califico de jurados
+  FK_project           Int // al proyecto al que se le califico
+  score                Int // Puntaje dado por el jurado
+  comments             String? // Comentarios opcionales sobre este criterio
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime?
+  actionHistory        Json? // Campo donde se guarda el historial objeto
+  tbevaluationcriteria tbevaluationcriteria @relation(fields: [FK_criteria], references: [PK_criteria])
+  tbjurors             tbjurors?            @relation(fields: [FK_assignment], references: [PK_assignment])
+  tbprojects           tbprojects           @relation(fields: [FK_project], references: [PK_project])
+}
