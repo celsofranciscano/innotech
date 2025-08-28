@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CalendarDays, Users, Trophy, BookOpen, GraduationCap, Eye, Plus } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { formatDate } from "@/utils/date/formatDate";
+
 
 interface Call {
   PK_call: number
@@ -66,15 +68,7 @@ export default function CallsPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
+
 
   const getStatusBadge = (call: Call) => {
     const now = new Date()
