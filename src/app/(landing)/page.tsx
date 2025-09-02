@@ -69,7 +69,6 @@ export default function HomePage() {
   const loadMoreProjects = () => {
     setVisibleProjects((prev) => prev + 6);
   };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
