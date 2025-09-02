@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   LayoutDashboard,
   Megaphone,
-  FolderOpen,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -15,7 +14,7 @@ const sidebarItems = [
     icon: Megaphone,
     href: "/account/calls",
   },
-  { id: "proyectos", label: "Proyectos", icon: FolderOpen, href: "/proyectos" },
+  // { id: "proyectos", label: "Proyectos", icon: FolderOpen, href: "/proyectos" },
 ];
 
 export function Sidebar() {
@@ -27,7 +26,7 @@ export function Sidebar() {
       <div className="h-16 px-6 border-b border-sidebar-border flex items-center gap-2">
         <img src={"/logo-upds-innova.png"} alt={"Logo"} className="w-8" />
         <h1 className="text-lg font-bold text-sidebar-foreground">
-          UPDS INNOVA
+          Innotech
         </h1>
       </div>
 
